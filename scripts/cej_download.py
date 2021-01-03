@@ -18,8 +18,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-def print_log_summary(expediente, retries, n_downloads, error_message,
-                      output_file=sys.stderr):
+def print_skip_summary(expediente, output_file=sys.stderr):
+    print("Expediente: %s. Skip.", file=output_file)
+
+
+def print_error_summary(expediente, retries, n_downloads, error_message,
+                        output_file=sys.stderr):
     if error_message:
         print("Expediente: %s. Retries: %d. Error: %s" %
               (expediente, retries, error_message), file=output_file)
@@ -54,6 +58,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output",
                         help="Output folder path",
                         required=True)
+    parser.add_argument("--skip-existing-dir",
+                        action="store_true",
+                        required=False)
     parser.add_argument("-f", "--force",
                         action="store_true",
                         required=False)
@@ -82,18 +89,25 @@ if __name__ == "__main__":
             continue
 
         output_dir = os.path.abspath(os.path.join(args.output, expediente))
+        log_path = os.path.join(args.log_dir, "%s.log" % expediente)
+        if args.skip_existing_dir and os.path.exists(output_dir):
+            if not args.silent:
+                print_skip_summary(expediente)
+            if args.log_dir:
+                with open(log_path, "w") as log_file:
+                    print_skip_summary(expediente, log_file)
+
         _, _, retries, n_downloads =\
             cej_scraper.run(expediente, output_dir, args.force, args.retries)
 
         if not args.silent:
-            print_log_summary(expediente, retries, n_downloads,
-                              cej_scraper.error_message)
+            print_error_summary(expediente, retries, n_downloads,
+                                cej_scraper.error_message)
 
         if args.log_dir:
-            log_path = os.path.join(args.log_dir, "%s.log" % expediente)
             with open(log_path, "w") as log_file:
-                print_log_summary(expediente, retries, n_downloads,
-                                  cej_scraper.error_message, log_file)
+                print_error_summary(expediente, retries, n_downloads,
+                                    cej_scraper.error_message, log_file)
                 print(cej_scraper.log, file=log_file)
 
     driver.quit()
