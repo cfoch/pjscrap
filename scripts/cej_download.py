@@ -22,14 +22,16 @@ def print_skip_summary(expediente, output_file=sys.stderr):
     print("Expediente: %s. Skip.", file=output_file)
 
 
-def print_error_summary(expediente, retries, n_downloads, error_message,
+def print_error_summary(expediente, cej_scraper, retries, n_downloads,
                         output_file=sys.stderr):
-    if error_message:
-        print("Expediente: %s. Retries: %d. Error: %s" %
-              (expediente, retries, error_message), file=output_file)
+    if cej_scraper.error_message:
+        msg = "Expediente: %s. Retries: %d. Error: %s"
+        msg %= (expediente, retries, cej_scraper.error_message)
     else:
-        print("Expediente: %s. Retries: %d. Success. Downloads: %d" %
-              (expediente, retries, n_downloads), file=output_file)
+        msg = "Expediente: %s. Retries: %d. Success. Downloads: %d"
+        msg %= (expediente, retries, n_downloads)
+
+    print(msg, file=output_file)
 
 
 if __name__ == "__main__":
@@ -101,13 +103,13 @@ if __name__ == "__main__":
             cej_scraper.run(expediente, output_dir, args.force, args.retries)
 
         if not args.silent:
-            print_error_summary(expediente, retries, n_downloads,
-                                cej_scraper.error_message)
+            print_error_summary(expediente, cej_scraper, retries, n_downloads)
 
         if args.log_dir:
             with open(log_path, "w") as log_file:
-                print_error_summary(expediente, retries, n_downloads,
-                                    cej_scraper.error_message, log_file)
-                print(cej_scraper.log, file=log_file)
+                print_error_summary(expediente, cej_scraper, retries,
+                                    n_downloads, log_file)
+                if cej_scraper.log:
+                    print(cej_scraper.log, file=log_file)
 
     driver.quit()

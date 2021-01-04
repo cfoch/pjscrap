@@ -59,6 +59,7 @@ class CejScraper:
         return ret
 
     def __run(self, expediente, output_dir, force, retries, should_reload):
+        self._log_retries(retries)
         if retries == 0:
             return False, False, 0, 0
 
@@ -83,6 +84,9 @@ class CejScraper:
                 return False, False, retries, n_downloads
 
         return should_continue, should_reload, retries, 0
+
+    def _log_retries(self, retries):
+        self.log += "Retry: %d\n" % retries
 
     def _click_tab(self, tab):
         if tab != Tab.CODIGO:
@@ -162,6 +166,7 @@ class CejScraper:
             if "No se encontraron registros con" in self.error_message:
                 return False, False, retries - 1
             else:
+                self._log_retries(retries - 1)
                 return self._input_captcha(retries - 1)
 
         self.error_message = ""
