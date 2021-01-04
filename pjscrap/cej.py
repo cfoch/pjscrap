@@ -10,6 +10,7 @@ from enum import Enum
 from PIL import Image
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
@@ -146,14 +147,21 @@ class CejScraper:
         os.remove(CEJ_CAPTCHA_SCREENSHOT_PATH)
 
         try:
-            elm = self.driver.find_element_by_id("codCaptchaError")
+            selector = "#codCaptchaError, #mensajeNoExisteExpedientes"
+            WebDriverWait(self.driver, 1).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+        except TimeoutException:
+            pass
+
+        elm = None
+        for id_ in ("codCaptchaError", "mensajeNoExisteExpedientes"):
             try:
-                elm = self.driver.find_element_by_id(
-                    "mensajeNoExisteExpedientes")
+                _e = self.driver.find_element_by_id(id_)
+                if _e and _e.is_displayed():
+                    elm = _e
+                    break
             except NoSuchElementException:
                 pass
-        except NoSuchElementException:
-            elm = None
 
         if elm is not None:
             self.error_message = elm.text.strip()
