@@ -79,13 +79,13 @@ if __name__ == "__main__":
 
     setup_ssl()
 
-    options = Options()
-    options.headless = args.headless
-    driver = webdriver.Firefox(options=options)
-
-    cej_scraper = CejScraper(driver, args.debug)
-
     for line in args.input.readlines():
+        options = Options()
+        options.headless = args.headless
+
+        driver = webdriver.Firefox(options=options)
+        cej_scraper = CejScraper(driver, args.debug)
+
         expediente = line.strip()
         if not expediente:
             continue
@@ -112,4 +112,4 @@ if __name__ == "__main__":
                 if cej_scraper.log:
                     print(cej_scraper.log, file=log_file)
 
-    driver.quit()
+        driver.quit()
