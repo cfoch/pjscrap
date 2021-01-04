@@ -32,7 +32,7 @@ def solve(path, show_process=False):
                              value=[255, 0, 0])
     _try_display()
 
-    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB))
 
     config_args = " ".join([
         "--psm", "13",
