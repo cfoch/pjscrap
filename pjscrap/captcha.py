@@ -6,14 +6,28 @@ import pytesseract
 from PIL import Image
 
 
-def solve(path, show_process=False):
+def solve(path_or_img, show_process=False):
     def _try_display():
         if show_process:
             cv2.imshow('img', img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-    img = cv2.imread(path)
+    def _to_opencv_image(path_or_img):
+        if isinstance(path_or_img, Image.Image):
+            rgb_img = np.array(path_or_img)
+            bgr_img = rgb_img[:, :, ::-1].copy()
+            return bgr_img
+        elif isinstance(path_or_img, str):
+            return cv2.imread(path_or_img)
+        elif isinstance(path_or_img, np.ndarray):
+            return path_or_img
+        return None
+
+    img = _to_opencv_image(path_or_img)
+    if img is None:
+        return ""
+
     img = img[0:, 10:]
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _try_display()
