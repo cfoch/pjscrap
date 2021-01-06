@@ -51,12 +51,17 @@ class CejScraperSimple:
         self.log = ""
 
     def run(self, output_dir, force, retries, should_reload=False):
+        self.error_message = ""
+        self.log = ""
+        return self._run(output_dir, force, retries, should_reload)
+
+    def _run(self, output_dir, force, retries, should_reload):
         try:
             return self.__run(output_dir, force, retries, should_reload)
         except Exception:
             self.log += traceback.format_exc()
             traceback.print_exc()
-            ret = self.__run(output_dir, force, retries - 1, should_reload)
+            ret = self._run(output_dir, force, retries - 1, should_reload)
         return ret
 
     def __run(self, output_dir, force, retries,
@@ -170,7 +175,7 @@ class CejScraperSimple:
                 nro_registro = div.find("input").get("value")
                 break
 
-        data = {"nroRegistro": int(nro_registro)}
+        data = {"nroRegistro": nro_registro}
         url = os.path.join(BASE_URL, "forms/detalleform.html")
         res = self.session.post(url, data=data, headers=headers)
 
