@@ -1,21 +1,9 @@
 # -*- coding: utf-8 -*-
 import argparse
-import mimetypes
 import os
 import sys
-import tempfile
-from enum import auto
-from enum import Enum
 
-import magic
-from PIL import Image
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+import requests
 
 
 def print_skip_summary(expediente, output_file=sys.stderr):
@@ -35,14 +23,6 @@ def print_error_summary(expediente, cej_scraper, retries, n_downloads,
 
 
 if __name__ == "__main__":
-
-    if "pjscrap" not in sys.modules:
-        root_dir = \
-            os.path.abspath(os.path.join(os.path.os.getcwd(), os.pardir))
-        sys.path.append(root_dir)
-        from pjscrap.utils import setup_ssl
-        from pjscrap.cej import CejScraper
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--headless",
@@ -74,21 +54,40 @@ if __name__ == "__main__":
                         required=False)
     parser.add_argument("--log-dir",
                         required=False)
+    parser.add_argument("--use-selenium",
+                        action="store_true",
+                        required=False)
 
     args = parser.parse_args()
 
+    if "pjscrap" not in sys.modules:
+        root_dir = \
+            os.path.abspath(os.path.join(os.path.os.getcwd(), os.pardir))
+        sys.path.append(root_dir)
+        from pjscrap.utils import setup_ssl
+        if args.use_selenium:
+            from pjscrap.cej import CejScraper
+        else:
+            from pjscrap.cej import CejScraperSimple
+
+    if args.use_selenium:
+        from selenium import webdriver
+        from selenium.webdriver.firefox.options import Options
     setup_ssl()
 
     for line in args.input.readlines():
-        options = Options()
-        options.headless = args.headless
-
-        driver = webdriver.Firefox(options=options)
-        cej_scraper = CejScraper(driver, args.debug)
-
         expediente = line.strip()
         if not expediente:
             continue
+
+        if args.use_selenium:
+            options = Options()
+            options.headless = args.headless
+            driver = webdriver.Firefox(options=options)
+            cej_scraper = CejScraper(driver, args.debug)
+        else:
+            session = requests.Session()
+            cej_scraper = CejScraperSimple(session, expediente, args.debug)
 
         output_dir = os.path.abspath(os.path.join(args.output, expediente))
         log_path = os.path.join(args.log_dir, "%s.log" % expediente)
@@ -99,8 +98,15 @@ if __name__ == "__main__":
                 with open(log_path, "w") as log_file:
                     print_skip_summary(expediente, log_file)
 
-        _, _, retries, n_downloads =\
-            cej_scraper.run(expediente, output_dir, args.force, args.retries)
+        if args.use_selenium:
+            _, _, retries, n_downloads =\
+                cej_scraper.run(expediente, output_dir, args.force,
+                                args.retries)
+        else:
+            _, _, retries, n_downloads =\
+                cej_scraper.run(output_dir, args.force, args.retries)
+
+        print("n_downloads: ", n_downloads)
 
         if not args.silent:
             print_error_summary(expediente, cej_scraper, retries, n_downloads)
@@ -112,4 +118,5 @@ if __name__ == "__main__":
                 if cej_scraper.log:
                     print(cej_scraper.log, file=log_file)
 
-        driver.quit()
+        if args.use_selenium:
+            driver.quit()

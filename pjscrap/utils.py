@@ -7,6 +7,9 @@ import requests
 import urllib3
 
 
+DEFAULT_DOWNLOAD_CHUNK_SIZE = 2048
+
+
 def get_request_session(driver):
     session = requests.Session()
     for cookie in driver.get_cookies():
@@ -26,8 +29,8 @@ def setup_ssl():
         pass
 
 
-def download(driver, output_dir, url, force, chunk_size=2048):
-    session = get_request_session(driver)
+def download_with_session(session, output_dir, url, force,
+                          chunk_size=DEFAULT_DOWNLOAD_CHUNK_SIZE):
     r = session.get(url, stream=True)
 
     _, params = cgi.parse_header(r.headers["Content-disposition"])
@@ -36,6 +39,12 @@ def download(driver, output_dir, url, force, chunk_size=2048):
     with open(output_filename, "wb") as f:
         for chunk in r.iter_content(chunk_size):
             f.write(chunk)
+
+
+def download_with_driver(driver, output_dir, url, force,
+                         chunk_size=DEFAULT_DOWNLOAD_CHUNK_SIZE):
+    session = get_request_session(driver)
+    download_with_session(session, output_dir, url, force, chunk_size)
 
 
 def check_valid_file(path):
