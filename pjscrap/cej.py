@@ -63,6 +63,7 @@ class CejScraperSimple:
               should_reload):
         should_continue, should_reload, retries = self._input_captcha(retries)
 
+        n_downloads = 0
         if should_continue:
             if should_reload:
                 should_continue, should_reload, retries, n_downloads = \
