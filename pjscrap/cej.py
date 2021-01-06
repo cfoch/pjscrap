@@ -56,7 +56,7 @@ class CejScraperSimple:
         except Exception:
             self.log += traceback.format_exc()
             traceback.print_exc()
-            ret = self._run(output_dir, force, retries - 1, should_reload)
+            ret = self.__run(output_dir, force, retries - 1, should_reload)
         return ret
 
     def __run(self, output_dir, force, retries,
