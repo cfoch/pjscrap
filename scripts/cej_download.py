@@ -106,8 +106,6 @@ if __name__ == "__main__":
             _, _, retries, n_downloads =\
                 cej_scraper.run(output_dir, args.force, args.retries)
 
-        print("n_downloads: ", n_downloads)
-
         if not args.silent:
             print_error_summary(expediente, cej_scraper, retries, n_downloads)
 
