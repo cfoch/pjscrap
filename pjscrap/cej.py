@@ -65,13 +65,13 @@ class CejScraperSimple:
 
         if should_continue:
             if should_reload:
-                should_continue, should_reload, retries, _ = \
+                should_continue, should_reload, retries, n_downloads = \
                     self.__run(output_dir, force, retries, should_reload)
             if should_continue and (not should_reload) and retries > 0:
                 n_downloads = self._download_resoluciones(output_dir, force)
-                return False, False, retries, 0
+                return False, False, retries, n_downloads
 
-        return should_continue, should_reload, retries, 0
+        return should_continue, should_reload, retries, n_downloads
 
     def _input_captcha(self, retries):
         if retries == 0:
